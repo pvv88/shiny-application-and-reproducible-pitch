@@ -2,9 +2,10 @@ name: project
 title: project
 account: pvv88
 server: shinyapps.io
-appId: 185090
-bundleId: 847541
+appId: 185098
+bundleId: 847623
 url: https://pvv88.shinyapps.io/project/
-when: 1496249435.65599
+when: 1496253552.5914
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: README.md|app/server.R|app/ui.R

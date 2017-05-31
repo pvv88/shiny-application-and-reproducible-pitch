@@ -15,7 +15,7 @@ shinyUI(fluidPage(
     ),
   
   # Application title
-  headerPanel("RED WINE TASTE TESTER"),
+  headerPanel("WINE TASTE TESTER"),
   
   ## sidebar containing input components
   sidebarPanel(

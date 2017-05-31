@@ -1,3 +1,4 @@
+library(shiny)
 rUrl <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv'
 wUrl <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv'
 
@@ -11,13 +12,13 @@ wine <- rbind(rWine,wWine)
 wine$color <- as.factor(wine$color)
 wine$color <- as.factor(wine$color)
 wine$quality <- as.numeric(wine$quality)
-wine$taste[wine$quality == 3] <- 'very poor'
+wine$taste[wine$quality <= 3] <- 'very poor'
 wine$taste[wine$quality == 4] <- 'poor'
 wine$taste[wine$quality == 5] <- 'average'
 wine$taste[wine$quality == 6] <- 'average'
 wine$taste[wine$quality == 7] <- 'above average'
 wine$taste[wine$quality == 8] <- 'excellent'
-wine$taste[wine$quality == 9] <- 'very excellent'
+wine$taste[wine$quality >= 9] <- 'very excellent'
 wine$taste <- as.factor(wine$taste)
 
 wine <- wine[, !(colnames(wine) %in% c("quality"))]
@@ -27,6 +28,8 @@ sample <- sample(nrow(wine), 0.7 * nrow(wine))
 train <- wine[sample, ]
 test <- wine[-sample, ]
 
+library(caret)
+library(e1071)
 library(randomForest)
 #model <- randomForest(taste ~ . - quality, data = train)
 tControl <- trainControl(method = "repeatedcv", number = 5, repeats = 3)

@@ -15,13 +15,13 @@ shinyUI(fluidPage(
     ),
   
   # Application title
-  headerPanel("RED WINE TASTE TESTER"),
+  headerPanel("WINE TESTER"),
   
   ## sidebar containing input components
   sidebarPanel(
     
     helpText("Fill the ingredients below before you click this button:"),
-    actionButton("eButton", "TASTE ME NOW!"),
+    actionButton("eButton", "TEST NOW!"),
     hr(),
     selectInput("color", "Wine Color:", c("white", "red"),multiple = FALSE, selectize = TRUE, 
                 width = NULL, size = NULL),
@@ -44,7 +44,7 @@ shinyUI(fluidPage(
       # prediction tab
       tabPanel("Wine Quality Evaluation", mainPanel(
         br(),
-        h4("The taste of your newly created wine is:"),
+        h4("The quality of your newly created wine is:"),
         hr(),
         textOutput("prediction"),
         br(),
