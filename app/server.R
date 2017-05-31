@@ -1,93 +1,90 @@
-# set locale to english for date manipulation
-Sys.setlocale("LC_ALL", "English")
+rUrl <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv'
+wUrl <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv'
 
+rWine <- read.table(rUrl, sep = ";", header = TRUE) 
+wWine <- read.table(wUrl, sep = ";", header = TRUE) 
 
-# import the required libraries
-library(shiny)
-library(nutshell)
-library(DT)
+rWine$color <- "red"
+wWine$color <- "white"
 
-# load and preprocess the data
-data(sanfrancisco.home.sales)
-housing <- sanfrancisco.home.sales
+wine <- rbind(rWine,wWine)
+wine$color <- as.factor(wine$color)
+wine$color <- as.factor(wine$color)
+wine$quality <- as.numeric(wine$quality)
+wine$taste[wine$quality == 3] <- 'very poor'
+wine$taste[wine$quality == 4] <- 'poor'
+wine$taste[wine$quality == 5] <- 'average'
+wine$taste[wine$quality == 6] <- 'average'
+wine$taste[wine$quality == 7] <- 'above average'
+wine$taste[wine$quality == 8] <- 'excellent'
+wine$taste[wine$quality == 9] <- 'very excellent'
+wine$taste <- as.factor(wine$taste)
 
-removeCols <- c("line", "county", "city", "latitude", "longitude")
-housing <- housing[,!(names(housing) %in% removeCols)]
+wine <- wine[, !(colnames(wine) %in% c("quality"))]
 
-housing$month <- as.Date(housing$month)
-housing$month <- format(housing$month, "%B")
-housing$month <- as.factor(housing$month)
+set.seed(123)
+sample <- sample(nrow(wine), 0.7 * nrow(wine))
+train <- wine[sample, ]
+test <- wine[-sample, ]
 
-neighborhoods <- unique(housing$neighborhood)
-naValues <- is.na(neighborhoods)
-
-neighborhoods <- neighborhoods[!naValues]
-neighborhoodNames <- as.character(neighborhoods[!naValues])
-neighborhoodNames <- sort(neighborhoodNames)
-
-housing4Table <- housing[,!(names(housing) %in% c("month"))]
-housing4Table$date <- format(housing4Table$date, "%B, %Y")
-
-housing4Table$price <- paste("$", format(housing4Table$price, big.mark=","), sep="")
-
-# build the model
-model <- lm(price ~ bedrooms + squarefeet + lotsize + month + neighborhood + year, 
-            data = housing)
+library(randomForest)
+#model <- randomForest(taste ~ . - quality, data = train)
+tControl <- trainControl(method = "repeatedcv", number = 5, repeats = 3)
+model <- train(taste ~ ., data = train,
+                method = "rf", ntree =5, trControl = tControl)
 
 # Server logic
 shinyServer(function(input, output, session) {
   
-  # update the neighborhood select box with data from the dataset
-  updateSelectInput(session, "neighborhood", choices = neighborhoodNames, 
-                    selected=neighborhoodNames[1])
+  result <- reactiveValues(ttype = "")
   
   # update the prediction output
   output$prediction <- renderText({
     
     # check if the data is provided, otherwise display error message
     validate(
-      need(input$bedrooms != '', 'Please enter number of bedrooms!'),
-      need(input$year != '', 'Please enter a year.')
+      need(input$color != '', 'Please enter color'),
+      need(input$fixed != '', 'Please enter fixed acidity value'),
+      need(input$volatile != '', 'Please enter volatile acidity value'),
+      need(input$citric != '', 'Please enter citric acidity value'),
+      need(input$residual != '', 'Please enter residual sugar value'),
+      need(input$chlorides != '', 'Please enter chlorides value'),
+      need(input$free != '', 'Please enter free sulfur dioxide value'),
+      need(input$total != '', 'Please enter total free sulfur dioxide value'),
+      need(input$pH != '', 'Please enter pH value'),
+      need(input$sulphates != '', 'Please enter sulphates value'),
+      need(input$alcohol != '', 'Please enter alcohol value')
     )
     
-    # if the button was not clicked before show space holder
-    if (input$estimateButton == 0) { 
-      "Please press the 'Estimate!' button to obtain your result."
-    } else if (input$estimateButton >= 1) {
+    if (input$eButton == 0) { 
+      "Press the 'Test Me Now!' button to view the Wine Taste result."
+    } else if (input$eButton >= 1) {
+      input$eButton 
       
-      # otherwise, wait for the user to press the estimate button
-      input$estimateButton  
-      isolate(paste(
-        "The estimated value of the house with the given characteristics is: $ ", 
-        format(round(predict(model, data.frame(bedrooms = input$bedrooms, 
-                                               squarefeet = input$squarefeet, 
-                                               lotsize = input$lotsize,
-                                               month = input$month,
-                                               neighborhood = input$neighborhood,
-                                               year = input$year))), big.mark=","),
-        ".", sep=""))}})
-  
-  # Generate an HTML table view of the complete dataset
-  output$fullSalesTable <- DT::renderDataTable(
-    DT::datatable(
-      housing4Table, 
-      colnames=c("Street", "ZIP Code", "Sold", "Price", "Bedrooms", "House Size (sqft)", 
-                 "Lot Size (sqft)", "Built", "Neighborhood"),
-      rownames = FALSE, selection = 'none',
-      options = list(pageLength = 15, lengthMenu = c(5, 10, 15, 20, 25)))
-  )
-  
+      qTaste <- predict(model, data.frame(color = input$color,
+                                           fixed.acidity = input$fixed,
+                                           volatile.acidity = input$volatile,
+                                           citric.acid = input$citric,
+                                           residual.sugar = input$residual,
+                                           chlorides = input$chlorides,
+                                           free.sulfur.dioxide = input$free, 
+                                           total.sulfur.dioxide = input$total,
+                                           pH = input$pH,
+                                           density = input$density,
+                                           sulphates = input$sulphates,
+                                           alcohol = input$alcohol))
+      result$ttype <- qTaste
+      isolate(paste(qTaste))
+        }
+    })
   # Generate an HTML table view of the data which matches the selected input
-  output$salesTable <- DT::renderDataTable(
+  output$WineTable <- DT::renderDataTable(
     DT::datatable({
-      data <- housing4Table
-      data <- data[(data$bedrooms == input$bedrooms & !is.na(data$bedrooms)) 
-                   | (data$year == input$year & !is.na(data$year)) 
-                   | (data$neighborhood == input$neighborhood & !is.na(data$neighborhood)),]
-      data}, selection = 'none',
-      colnames = c("Street", "ZIP Code", "Sold", "Price", "Bedrooms", 
-                   "House Size (sqft)", "Lot Size (sqft)", "Built", "Neighborhood"),
+      wdata <- wine
+      wdata <- wdata[wdata$taste == result$ttype,]   
+      wdata}, selection = 'none',
       rownames = FALSE, options = list(searching = FALSE, pageLength = 10, 
                                        lengthMenu = c(5, 10, 15)))
   )
+  
 })

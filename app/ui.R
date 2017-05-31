@@ -15,66 +15,45 @@ shinyUI(fluidPage(
     ),
   
   # Application title
-  headerPanel("HOUSE PRICE ESTIMATOR"),
+  headerPanel("RED WINE TASTE TESTER"),
   
   ## sidebar containing input components
   sidebarPanel(
     
-    helpText("Please provide the following information about your house:"),
+    helpText("Fill the ingredients below before you click this button:"),
+    actionButton("eButton", "TASTE ME NOW!"),
     hr(),
-    numericInput("year", "When was the house built?", 
-                 value=as.numeric(format(Sys.Date(), "%Y")), step=1),
-    numericInput('bedrooms', 'Number of bedrooms:', 1, min = 1, max = 20, step = 1),
-    sliderInput("squarefeet", "House size (sqft):", value = 500, min = 0, max = 15000),
-    sliderInput("lotsize", "Lot size (sqft):", value = 500, min = 0, max = 15000),
-    hr(),
-    selectInput("neighborhood", "In which San Francisco neighborhood is the house located?", c(), 
-                selected = NULL, multiple = FALSE, selectize = TRUE, width = NULL, size = NULL),
-    hr(),
-    selectInput("month", "When do you plan to sell/buy?", c("January", "February", 
-                                                            "March", "April", "May", 
-                                                            "June", "July", "August", 
-                                                            "September", "October", 
-                                                            "November", "December"), 
-                selected = format(Sys.Date(), "%B"), multiple = FALSE, selectize = TRUE, 
+    selectInput("color", "Wine Color:", c("white", "red"),multiple = FALSE, selectize = TRUE, 
                 width = NULL, size = NULL),
-    br(),
-    actionButton("estimateButton", "Estimate!")
+    sliderInput("fixed", "Fixed Acidity:", 1, min = 1, max = 20),
+    sliderInput("volatile", "Volatile Acidity:", 0.1, min = 0.1, max = 2),
+    sliderInput("citric", "Citric Acid:", 0.00, min = 0.00, max = 1.00),
+    sliderInput("residual", "Residual Sugar:", 0.1, min = 0.1, max = 20),
+    sliderInput("chlorides", "Chlorides:", 0.01, min = 0.01, max = .1),
+    sliderInput("free", "Free Sulfur Dioxide:", 1, min = 1, max = 72),
+    sliderInput("total", "Total Sulfur Dioxide:", 6, min = 6, max = 289),
+    sliderInput("density", "Density:", 0.99007, min = 0, max = 1.00000),
+    sliderInput("pH", "pH:", 0.1, min = 0.1, max = 2.0),
+    sliderInput("sulphates", "Sulphates:", 0.33, min = 0.33, max = 2.0),
+    sliderInput("alcohol", "Alcohol:", 8.4, min = 8.4, max =14.9)
   ),
   
-  # A tabset that includes the prediction part, complete dataset represented as table and 
-  # the help file
+  # Includes the prediction andcomplete dataset represented as table and help file
   mainPanel(
     tabsetPanel(
       # prediction tab
-      tabPanel("House Price Estimation", mainPanel(
+      tabPanel("Wine Quality Evaluation", mainPanel(
         br(),
-        h4("Price Estimation for Your House"),
+        h4("The taste of your newly created wine is:"),
         hr(),
         textOutput("prediction"),
         br(),
         br(),
-        h4('Previously Sold Houses with Similar Characteristics'),
+        h4('Previously evaluated Wine Mixes with Similar Characteristics'),
         hr(),
-        helpText("The table below shows houses similar on one or more of the following 
-                 criteria: number of bedrooms, the year when the house was built, and the 
-                 neighborhood. For a complete listing of houses sold in San Francisco, 
-                 in the period between February, 2008 and July, 2009, please refer to the 
-                 'Previous House Sales' tab."),  
+        helpText("The table below shows wines that have similar criteria as your wine"),  
         br(),
-        DT::dataTableOutput("salesTable"), style = 'width:100%;'
-        )), 
-      
-      # complete dataset tab
-      tabPanel("Previous House Sales", mainPanel(
-        br(),
-        h4("Houses Sold in San Francico in the Period Between February, 2008 and July, 2009"),
-        hr(),
-        br(),
-        DT::dataTableOutput("fullSalesTable"), style = 'width:100%;'))
-      
-      # help file tab
-      #tabPanel("About This App", includeMarkdown("summary.md"))
-      )
-    )
+        DT::dataTableOutput("WineTable"), style = 'width:100%;'
+        ))
       ))
+))
